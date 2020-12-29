@@ -1,7 +1,6 @@
-# NOTE: update this with your service name
-service: mhl-notes-api
+service: notes-api
 
-# Create an optimized package for our functions 
+# Create an optimized package for our functions
 package:
   individually: true
 
@@ -13,20 +12,35 @@ plugins:
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: dev
+  stage: prod
   region: eu-west-1
-  # To load environment variables externally
-  # rename env.example to .env and uncomment
-  # the following line. Also, make sure to not
-  # commit your .env.
-  #
-  #environment:
-  #  SAMPLE_ENV_VAR: ${env:SAMPLE_ENV_VAR}
+
+  # These environment variables are made available to our functions
+  # under process.env.
+  environment:
+    tableName: notes
+
+  # 'iamRoleStatements' defines the permission policy for the Lambda function.
+  # In this case Lambda functions are granted with permissions to access DynamoDB.
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:DescribeTable
+      Resource: "arn:aws:dynamodb:eu-west-1:*:*"
 
 functions:
-  hello:
-    handler: handler.hello
+  # Defines an HTTP API endpoint that calls the main function in create.js
+  # - path: url path is /notes
+  # - method: POST request
+  create:
+    handler: create.main
     events:
       - http:
-          path: hello
-          method: get
+          path: notes
+          method: post
